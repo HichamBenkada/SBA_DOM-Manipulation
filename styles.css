@@ -1,0 +1,35 @@
+*{
+    background-color: #ffd6ff;
+}
+
+body{
+    text-align: center;
+}
+
+#app{
+    background-color: red;
+    border:1px solid blue;
+    border-radius: 10px;
+    height: 100px;
+    margin:10%;
+    padding: 10%;
+}
+
+
+button{
+    background-color: #c8b6ff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+button:hover{
+    border: 2px solid blue;
+    background-color: #b8c0ff;
+    color: green;
+    font-family: Comic sans-serif;
+}
+
+img{
+    width:15px;
+    height: 15px;
+}
