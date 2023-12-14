@@ -1,20 +1,166 @@
 console.log("Welcome to DOM End of Module SBA");
-let moves = 0,
-    winCount = 0;
-  let cards;
-  let interval;
-  let firstCard = false;
-  let secondCard = false;
-  let sec = 0, min = 0;
 
+//the app container:
+const app = document.getElementById("app");
+
+//element initialization
 const h1El = document.createElement("h1");
 const pEl = document.createElement("p");
 const btnEl = document.createElement("button");
+
 //Welcome Page
 h1El.textContent = "Welcome to Memory Card Matching Project";
 document.body.prepend(h1El);
 
-//FridgeItems for the game
+pEl.textContent =
+  "Come join the fun with my Memory Matching game! Jump right in and give it a try!";
+app.prepend(pEl);
+//Create and appened the "Start the game" button
+let startBtn = btnEl;
+startBtn.textContent = "Start the game";
+app.appendChild(startBtn);
+
+//handle user requist starting the game
+startBtn.addEventListener("click", (event) => {
+  //prevent bubbling
+  event.stopPropagation();
+  //explicitly handle event by preventing its default actions
+  event.preventDefault();
+  userInput = prompt("Hey! there, Please Enter Your Name") || "User";
+  h1El.textContent = `Welcome ${userInput}!`;
+  //start the game (ease-out)
+  startGame();
+});
+
+//---- Game Setting----
+//initialisation of variables
+let moves = 0,
+  winCount = 0;
+let cards;
+let interval;
+let firstCard = false;
+let secondCard = false;
+let sec = 0,
+  min = 0;
+
+// time Generator function
+const timer = () => {
+  sec += 1;
+  if (sec > 59) {
+    min += 1;
+    sec = 0;
+  }
+};
+
+//handling moves:
+const movesEl = document.getElementById("movesCount");
+const movesCounter = () => {
+  moves += 1;
+};
+
+
+//Game Generator:
+function matrixGenerator(generatedCards, size = 4) {
+  //making dublicates of cards
+  let gameCards = [...generatedCards, ...generatedCards];
+  //Cards quick shuffling
+  gameCards.sort(() => 0.5 - Math.random());
+  //Cards
+  let gameContainer = document.getElementById("gameGrid");
+  for (let i = 0; i < size * size; i++) {
+    gameContainer.innerHTML += `<div class="cardContainer" data-card-value="${gameCards[i].name}">
+        <div class="cardBack">?</div>
+        <div class="cardFront"><img src ="${gameCards[i].src}" class="image"/></div>
+    </div>`;
+  }
+  //Styling the game as a grid
+  gameContainer.style.gridTemplateColumns = `repeat(${size},auto)`;
+
+  //cards distribution
+  cards = document.querySelectorAll(".card-container");
+
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      //if selected is aleardy matched then ignore it
+      if (!card.classList.contains("matched")) {
+        card.classList.add("flipped");
+        if (!firstCard) {
+          // the user selected the first card
+          firstCard = card;
+          firstCardValue = card.getAttribute("data-card-value");
+        } else {
+          // the use selected the second card
+          movesCounter();
+          secondCard = card;
+          secondCardValue = card.getAttribute("data-card-value");
+          if (firstCardValue == secondCardValue) {
+            //if the cards matched should be ignored..
+            firstCard.classList.add("matched");
+            secondCard.classList.add("matched");
+            //initiat first card
+            firstCard = false;
+            //a win
+            winCount++;
+            if (winCount === Math.floor(generatedCards.length / 2)) {
+              result.innerHTML = `<h2> You Won </h2>
+                    <h4>moves: ${moves}</h4>`;
+              stopGame();
+            }
+          } else {
+            //if the card don't match
+            let [tempFirst, tempSecond] = [firstCard, secondCard];
+            firstCard = false;
+            secondCard = false;
+            setTimeout(() => {
+              tempFirst.classList.remove("flipped");
+              tempSecond.classList.remove("flipped");
+            }, 900);
+          }
+        }
+      }
+    });
+  });
+}
+
+// Initialize the game
+function initializer(){
+  moves = 0;
+  winCount = 0;
+  firstCard = false;
+  secondCard = false;
+  sec = 0;
+  min = 0;
+  startBtn.classList.add("hide");
+ };
+
+// // start the game
+function startGame() {
+  initializer();
+  let generatedCards = cardsGenerator();
+  // console.log(generatedCards);//generated cards is checked
+  app.innerHTML = `<div class="stats">
+    <div>Moves: ${moves}</div>
+    <div>Timer ${min < 10 ? `0${min}` : min}:${sec < 10 ? `0${sec}` : sec}</div>
+  </div>
+  <div id="gameGrid"></div>
+  <button id="stop">Stop Game</button>`;
+  matrixGenerator(generatedCards);
+  interval = setInterval(timer, 1000);
+}
+
+let stopBtn = btnEl;
+// stop the game
+function stopGame() {
+  h1El.textContent = "Thank you!!";
+  pEl.textContent = "That Was fun, right? Play again...";
+  app.appendChild(pEl);
+  stopBtn.classList.add("hide");
+  startBtn.classList.remove("hide");
+  clearInterval(interval);
+}
+
+//---------Generate the game cards-------------
+//Items to chose cards from:
 const fridgeItems = [
   { name: "Apple", src: "images/Apple.PNG" },
   { name: "Avocado", src: "images/Avocado.PNG" },
@@ -54,64 +200,6 @@ const fridgeItems = [
   { name: "Yogurt", src: "images/Yogurt.PNG" },
 ]; // console.log(fridgeItems.length, fridgeItems);//itms are checked in the img folder
 
-//the app container:
-const app = document.getElementById("app");
-
-let startBtn = btnEl;
-startBtn.textContent = "Start the game";
-app.appendChild(startBtn);
-pEl.textContent =
-  "Come join the fun with my Memory Matching game! Jump right in and give it a try!";
-app.prepend(pEl);
-
-//handle user requist starting the game
-startBtn.addEventListener("click", handleClick);
-//Click event handler
-function handleClick(event) {
-  //prevent bubbling
-  event.stopPropagation();
-  //explicitly handle event by preventing its default actions
-  event.preventDefault();
-  userInput = prompt("Hey! there, Please Enter Your Name") || "User";
-  h1El.textContent = `Welcome ${userInput}!`;
-  //start the game (ease-out)
-  startGame();
-}
-// _________________________________
-
-function gameLayout(){
-app.innerHTML = `<div class="stats">
-  <div id="movesCount">Moves: 0</div>
-  <div id="time"></div>
-</div>
-<div id="gameContainer"></div>
-<button id="stop">Stop Game</button>`;
-}
-
-
-//creation of time element:
-const timeEl = document.getElementById("time");
-// time Logic
-const timer = () => {
-  sec += 1;
-  if (sec >= 60) {
-    min += 1;
-    sec = 0;
-  }
-  //time format
-  let seconds = (sec < 10) ? `0${sec}` : sec;
-  let minutes = (min < 10) ? `0${min}` : min;
-  timeEl.textContent = `Timer ${minutes}:${seconds}`;
-};
-
-//handling moves:
-const movesEl = document.getElementById("movesCount");
-const movesCounter = () => {
-  moves += 1;
-  movesEl.textContent = `Moves: ${moves}`;
-};
-
-//Generate cards
 function cardsGenerator(size = 4) {
   // store original Array
   const tempArray = [...fridgeItems];
@@ -123,103 +211,4 @@ function cardsGenerator(size = 4) {
     tempArray.splice(randomIndex, 1);
   }
   return generatedCards;
-}
-
-//Game Generator:
-const matrixGenerator = (generatedCards, size = 4) => {
-    let gameContainer = document.getElementById("gameContainer");
-  gameContainer.textContent = "";
-  let gameCards = [...generatedCards, ...generatedCards];
-
-  //Cards shuffling
-  gameCards.sort(() => 0.5 - Math.random());
-
-  //grid (card spread) generation
-
-  for (let i = 0; i < size * size; i++) {
-    gameContainer.innerHTML += `<div class="cardContainer" data-card-value="${gameCards[i].name}">
-        <div class="cardBack">?</div>
-        <div class="cardFront"><img src ="${gameCards[i].src}" class="image"/></div>
-    </div>`;
-  }
-  //grid
-  gameContainer.style.gridTemplateColumns = `repeat(${size},auto)`;
-
-  //cards
-  cards = document.querySelectorAll(".card-container");
-
-  cards.forEach((card) => {
-    card.addEventListener("click", () => {
-      //if selected is aleardy matched then ignore it
-      if (!card.classList.contains("matched")){
-        card.classList.add("flipped");
-        if (!firstCard) {
-          // the user selected the first card
-          firstCard = card;
-          firstCardValue = card.getAttribute("data-card-value");
-        } else {
-          // the use selected the second card
-          movesCounter();
-          secondCard = card;
-          secondCardValue = card.getAttribute("data-card-value");
-          if (firstCardValue == secondCardValue) {
-            //if the cards matched should be ignored..
-            firstCard.classList.add("matched");
-            secondCard.classList.add("matched");
-            //initiat first card
-            firstCard = false;
-            //a win
-            winCount++;
-            if (winCount === Math.floor(generatedCards.length / 2)) {
-              result.innerHTML = `<h2> You Won </h2>
-                    <h4>moves: ${moves}</h4>`;
-              stopGame();
-            }
-          } else {
-            //if the card don't match
-            let [tempFirst, tempSecond] = [firstCard, secondCard];
-            firstCard = false;
-            secondCard = false;
-            setTimeout(() => {
-              tempFirst.classList.remove("flipped");
-              tempSecond.classList.remove("flipped");
-            }, 900);
-          }
-        }
-      }
-    });
-  });
-};
-
-// Initialize the game
-const initializer = () => {
-    gameLayout()
-  moves = 0;winCount = 0;
-  firstCard = false; secondCard = false;
-  sec = 0; min = 0;
-  h1El.textContent ="";
-  stopBtn.classList.remove("hide");
-  startBtn.classList.add("hide");
-};
-
-// // start the game
-function startGame() {
-  initializer();
-  let generatedCards = cardsGenerator();
-  // show generated cards
-  console.log(generatedCards);
-  matrixGenerator(generatedCards);
-  interval = setInterval(timer, 1000);
-  
-}
-
-let stopBtn = btnEl;
-// stop the game
-function stopGame() {
-  h1El.textContent = "Thank you!!";
-  pEl.textContent = "That Was fun, right? Play again...";
-  app.appendChild(pEl);
-  stopBtn.classList.add("hide");
-  startBtn.classList.remove("hide");
-  clearInterval(interval);
 }
