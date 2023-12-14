@@ -1,8 +1,15 @@
 console.log("Welcome to DOM End of Module SBA");
+let moves = 0,
+    winCount = 0;
+  let cards;
+  let interval;
+  let firstCard = false;
+  let secondCard = false;
+  let sec = 0, min = 0;
 
 const h1El = document.createElement("h1");
 const pEl = document.createElement("p");
-const btnEl = document.createElement("button")
+const btnEl = document.createElement("button");
 //Welcome Page
 h1El.textContent = "Welcome to Memory Card Matching Project";
 document.body.prepend(h1El);
@@ -45,206 +52,171 @@ const fridgeItems = [
   { name: "Turkey", src: "images/Turkey.PNG" },
   { name: "Watermelon", src: "images/Watermelon.PNG" },
   { name: "Yogurt", src: "images/Yogurt.PNG" },
-];// console.log(fridgeItems.length, fridgeItems);//itms are checked in the img folder
+]; // console.log(fridgeItems.length, fridgeItems);//itms are checked in the img folder
 
-//the game container:
+//the app container:
 const app = document.getElementById("app");
 
-let Startbtn = btnEl;
-Startbtn.textContent = "Start the game";
-app.appendChild(Startbtn);
+let startBtn = btnEl;
+startBtn.textContent = "Start the game";
+app.appendChild(startBtn);
 pEl.textContent =
   "Come join the fun with my Memory Matching game! Jump right in and give it a try!";
 app.prepend(pEl);
 
-//handle dynamic event delegation
-app.addEventListener("click", handleClick);
-
+//handle user requist starting the game
+startBtn.addEventListener("click", handleClick);
+//Click event handler
 function handleClick(event) {
-//prevent bubbling
+  //prevent bubbling
   event.stopPropagation();
-//explicitly handle event by preventing its default actions
+  //explicitly handle event by preventing its default actions
   event.preventDefault();
-  if (event.target.localName !== "button") {
-    return;
-  } else {
-    userInput = prompt("Hey! there, Please Enter Your Name") || "World";
-    h1El.textContent = `Welcome ${userInput}!`
-    pEl.textContent = " select difficulty level"
-    Startbtn.classList.add("hide");
-    //start the game (ease-out)
+  userInput = prompt("Hey! there, Please Enter Your Name") || "World";
+  h1El.textContent = `Welcome ${userInput}!`;
+  //start the game (ease-out)
+  startGame();
+}
+// _________________________________
+
+function gameLayout(){
+app.innerHTML = `<div class="stats">
+  <div id="movesCount">Moves: 0</div>
+  <div id="time">Time 00:00</div>
+</div>
+<div class="gameContainer"></div>
+<button id="stop" class="hide">Stop Game</button>`;
+}
+// Initialize the game
+const initializer = () => {
+    gameLayout()
+  moves = 0;winCount = 0;
+  firstCard = false; secondCard = false;
+  sec = 0; min = 0;
+  h1El.textContent ="";
+  stopBtn.classList.remove("hide");
+  startBtn.classList.add("hide");
+};
+
+//creation of time element:
+const timeEl = document.getElementById("time");
+// time Logic
+const timer = () => {
+  sec += 1;
+  if (sec >= 60) {
+    min += 1;
+    sec = 0;
   }
+  //time format
+  let seconds = (sec < 10) ? `0${sec}` : sec;
+  let minutes = (min < 10) ? `0${min}` : min;
+  timeEl.textContent = `Timer ${minutes}:${seconds}`;
+};
+
+//handling moves:
+const movesEl = document.createElement("div");
+const movesCounter = () => {
+  moves += 1;
+  movesEl.textContent = `Moves: ${moves}`;
+};
+
+//Generate cards
+function cardsGenerator(size = 4) {
+  // store original Array
+  const tempArray = [...fridgeItems];
+  let generatedCards = [];
+  size = (size * size) / 2;
+  for (let i = 0; i < size; i++) {
+    const randomIndex = Math.floor(Math.random() * tempArray.length);
+    generatedCards.push(tempArray[randomIndex]);
+    tempArray.splice(randomIndex, 1);
+  }
+  return generatedCards;
 }
 
-// _________________________________
-// const movesCount = document.getElementById("moves-count");
-// const timeValue = document.getElementById("time");
-// const startBtn = document.getElementById("start");
-// const stopBtn = document.getElementById("stop");
-// const gameContainer = document.querySelector(".game-container");
-// const result = document.getElementById("result");
-// const controls = document.querySelector(".controls-container");
+//Game Generator:
+const matrixGenerator = (generatedCards, size = 4) => {
+  gameContainer.textContent = "";
+  generatedCards = [...generatedCards, ...generatedCards];
 
-// //
-// let cards;
-// let interval;
-// let firstCard = false;
-// let firstCardValue;
-// let secondCard = false;
-// let secondCardValue;
+  //Cards shuffling
+  generatedCards.sort(() => 0.5 - Math.random());
 
-// // initial time
-// let sec = 0,
-//   min = 0;
-// // initial moves
-// let moves = 0,
-//   winCount = 0;
+  //grid (card spread) generation
+  for (let i = 0; i < size * size; i++) {
+    gameContainer.innerHTML += `<div class="card-container" data-card-value="${generatedCards[i].name}">
+        <div class="card-before">?</div>
+        <div class="card-after"><img src ="${generatedCards[i].src}" class="image"/></div>
+    </div>`;
+  }
+  //grid
+  gameContainer.style.gridTemplateColumns = `repeat(${size},auto)`;
 
-// // time Logic
-// const timeGenerator = () => {
-//   sec += 1;
-//   if (sec >= 60) {
-//     min += 1;
-//     sec = 0;
-//   }
-//   //time format
-//   let seconds = sec < 10 ? `0${sec}` : sec;
-//   let minutes = min < 10 ? `0${min}` : min;
-//   timeValue.textContent = `Time ${minutes}:${seconds}`;
-// };
+  //cards
+  cards = document.querySelectorAll(".card-container");
 
-// //Calculating moves:
-// const movesCounter = () => {
-//   moves += 1;
-//   movesCount.textContent = `moves: ${moves}`;
-// };
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      //if selected matched ignore it
+      if (!card.classList.contains("matched")){
+        card.classList.add("flipped");
+        if (!firstCard) {
+          // the user selected the first card
+          firstCard = card;
+          firstCardValue = card.getAttribute("data-card-value");
+        } else {
+          // the use selected the second card
+          movesCounter();
+          secondCard = card;
+          secondCardValue = card.getAttribute("data-card-value");
+          if (firstCardValue == secondCardValue) {
+            //if the cards matched should be ignored..
+            firstCard.classList.add("matched");
+            secondCard.classList.add("matched");
+            //initiat first card
+            firstCard = false;
+            //a win
+            winCount++;
+            if (winCount === Math.floor(generatedCards.length / 2)) {
+              result.innerHTML = `<h2> You Won </h2>
+                    <h4>moves: ${moves}</h4>`;
+              stopGame();
+            }
+          } else {
+            //if the card don't match
+            let [tempFirst, tempSecond] = [firstCard, secondCard];
+            firstCard = false;
+            secondCard = false;
+            setTimeout(() => {
+              tempFirst.classList.remove("flipped");
+              tempSecond.classList.remove("flipped");
+            }, 900);
+          }
+        }
+      }
+    });
+  });
+};
 
-// const items = [
-//   { name: "Sausage", src: "images/Sausage.PNG" },
-//   { name: "Shrimp", src: "images/Shrimp.PNG" },
-//   { name: "Spinach", src: "images/Spinach.PNG" },
-//   { name: "Steak.PNG", src: "images/Steak.PNG" },
-//   { name: "Strowberry", src: "images/Strowberry.PNG" },
-//   { name: "SweetPotato", src: "images/SweetPotato.PNG" },
-//   { name: "Tomato", src: "images/Tomato.PNG" },
-//   { name: "Turkey", src: "images/Turkey.PNG" },
-//   { name: "Watermelon", src: "images/Watermelon.PNG" },
-//   { name: "Yogurt", src: "images/Yogurt.PNG" },
-//   { name: "Breads", src: "images/Breads.PNG" },
-//   { name: "Broccoli", src: "images/Broccoli.PNG" },
-// ];
-
-// let size;
-// //choosing cards at random...
-// const cardsGenerator = (size = 4) => {
-//   // store original Array
-//   const tempArray = [...items];
-//   let generatedCards = [];
-//   //since a matched pair shoud exist the size doubles:
-//   size = (size * size) / 2;
-//   for (let i = 0; i < size; i++) {
-//     const randomIndex = Math.floor(Math.random() * tempArray.length);
-//     generatedCards.push(tempArray[randomIndex]);
-//     tempArray.splice(randomIndex, 1);
-//   }
-//   return generatedCards;
-// };
-
-// //Game Generator:
-// const matrixGenerator = (generatedCards, size = 4) => {
-//   gameContainer.textContent = "";
-//   generatedCards = [...generatedCards, ...generatedCards];
-
-//   //Cards shuffling
-//   generatedCards.sort(() => 0.5 - Math.random());
-
-//   //grid (card spread) generation
-//   for (let i = 0; i < size * size; i++) {
-//     gameContainer.innerHTML += `<div class="card-container" data-card-value="${generatedCards[i].name}">
-//         <div class="card-before">?</div>
-//         <div class="card-after"><img src ="${generatedCards[i].src}" class="image"/></div>
-//     </div>`;
-//   }
-//   //grid
-//   gameContainer.style.gridTemplateColumns = `repeat(${size},auto)`;
-
-//   //cards
-//   cards = document.querySelectorAll(".card-container");
-
-//   cards.forEach((card) => {
-//     card.addEventListener("click", () => {
-//       //if selected matched ignore it
-//       if (!card.classList.contains("matched")){
-//         card.classList.add("flipped");
-//         if (!firstCard) {
-//           // the user selected the first card
-//           firstCard = card;
-//           firstCardValue = card.getAttribute("data-card-value");
-//         } else {
-//           // the use selected the second card
-//           movesCounter();
-//           secondCard = card;
-//           secondCardValue = card.getAttribute("data-card-value");
-//           if (firstCardValue == secondCardValue) {
-//             //if the cards matched should be ignored..
-//             firstCard.classList.add("matched");
-//             secondCard.classList.add("matched");
-//             //initiat first card
-//             firstCard = false;
-//             //a win
-//             winCount++;
-//             if (winCount === Math.floor(generatedCards.length / 2)) {
-//               result.innerHTML = `<h2> You Won </h2>
-//                     <h4>moves: ${moves}</h4>`;
-//               stopGame();
-//             }
-//           } else {
-//             //if the card don't match
-//             let [tempFirst, tempSecond] = [firstCard, secondCard];
-//             firstCard = false;
-//             secondCard = false;
-//             setTimeout(() => {
-//               tempFirst.classList.remove("flipped");
-//               tempSecond.classList.remove("flipped");
-//             }, 900);
-//           }
-//         }
-//       }
-//     });
-//   });
-// };
-
-// // Initialize the game
-// const initializer = () => {
-//   result.textContent = "";
-//   winCount = 0;
-//   let generatedCards = cardsGenerator();
-//   // show generated cards
-//   console.log(generatedCards);
-//   matrixGenerator(generatedCards);
-// };
 
 // // start the game
-// startBtn.addEventListener("click", () => {
-//   moves = 0;
-//   sec = 0;
-//   min = 0;
-//   movesCount.textContent = `moves: ${moves}`;
-//   timeValue.textContent = "Time 00:00";
-// //start time
-// interval = setInterval(timeGenerator, 1000);
-//   controls.classList.add("hide");
-//   stopBtn.classList.remove("hide");
-//   startBtn.classList.add("hide");
-//   initializer();
-// });
-// // stop game
-// stopBtn.addEventListener(
-//   "click",
-//   (stopGame = () => {
-//     controls.classList.remove("hide");
-//     stopBtn.classList.add("hide");
-//     startBtn.classList.remove("hide");
-//     clearInterval(interval);
-//   })
-// );
+function startGame() {
+  initializer();
+  let generatedCards = cardsGenerator();
+  // show generated cards
+  console.log(generatedCards);
+  matrixGenerator(generatedCards);
+  interval = setInterval(timeGenerator, 1000);
+  
+}
+
+let stopBtn = btnEl;
+// stop the game
+function stopGame() {
+  h1El.textContent = "Thank you!!";
+  pEl.textContent = "That Was fun, right? Play again...";
+  app.appendChild(pEl);
+  stopBtn.classList.add("hide");
+  startBtn.classList.remove("hide");
+  clearInterval(interval);
+}
