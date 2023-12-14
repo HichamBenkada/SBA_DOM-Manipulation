@@ -72,7 +72,7 @@ function handleClick(event) {
   event.stopPropagation();
   //explicitly handle event by preventing its default actions
   event.preventDefault();
-  userInput = prompt("Hey! there, Please Enter Your Name") || "World";
+  userInput = prompt("Hey! there, Please Enter Your Name") || "User";
   h1El.textContent = `Welcome ${userInput}!`;
   //start the game (ease-out)
   startGame();
@@ -82,21 +82,12 @@ function handleClick(event) {
 function gameLayout(){
 app.innerHTML = `<div class="stats">
   <div id="movesCount">Moves: 0</div>
-  <div id="time">Time 00:00</div>
+  <div id="time"></div>
 </div>
-<div class="gameContainer"></div>
-<button id="stop" class="hide">Stop Game</button>`;
+<div id="gameContainer"></div>
+<button id="stop">Stop Game</button>`;
 }
-// Initialize the game
-const initializer = () => {
-    gameLayout()
-  moves = 0;winCount = 0;
-  firstCard = false; secondCard = false;
-  sec = 0; min = 0;
-  h1El.textContent ="";
-  stopBtn.classList.remove("hide");
-  startBtn.classList.add("hide");
-};
+
 
 //creation of time element:
 const timeEl = document.getElementById("time");
@@ -114,7 +105,7 @@ const timer = () => {
 };
 
 //handling moves:
-const movesEl = document.createElement("div");
+const movesEl = document.getElementById("movesCount");
 const movesCounter = () => {
   moves += 1;
   movesEl.textContent = `Moves: ${moves}`;
@@ -136,17 +127,19 @@ function cardsGenerator(size = 4) {
 
 //Game Generator:
 const matrixGenerator = (generatedCards, size = 4) => {
+    let gameContainer = document.getElementById("gameContainer");
   gameContainer.textContent = "";
-  generatedCards = [...generatedCards, ...generatedCards];
+  let gameCards = [...generatedCards, ...generatedCards];
 
   //Cards shuffling
-  generatedCards.sort(() => 0.5 - Math.random());
+  gameCards.sort(() => 0.5 - Math.random());
 
   //grid (card spread) generation
+
   for (let i = 0; i < size * size; i++) {
-    gameContainer.innerHTML += `<div class="card-container" data-card-value="${generatedCards[i].name}">
-        <div class="card-before">?</div>
-        <div class="card-after"><img src ="${generatedCards[i].src}" class="image"/></div>
+    gameContainer.innerHTML += `<div class="cardContainer" data-card-value="${gameCards[i].name}">
+        <div class="cardBack">?</div>
+        <div class="cardFront"><img src ="${gameCards[i].src}" class="image"/></div>
     </div>`;
   }
   //grid
@@ -157,7 +150,7 @@ const matrixGenerator = (generatedCards, size = 4) => {
 
   cards.forEach((card) => {
     card.addEventListener("click", () => {
-      //if selected matched ignore it
+      //if selected is aleardy matched then ignore it
       if (!card.classList.contains("matched")){
         card.classList.add("flipped");
         if (!firstCard) {
@@ -198,6 +191,16 @@ const matrixGenerator = (generatedCards, size = 4) => {
   });
 };
 
+// Initialize the game
+const initializer = () => {
+    gameLayout()
+  moves = 0;winCount = 0;
+  firstCard = false; secondCard = false;
+  sec = 0; min = 0;
+  h1El.textContent ="";
+  stopBtn.classList.remove("hide");
+  startBtn.classList.add("hide");
+};
 
 // // start the game
 function startGame() {
@@ -206,7 +209,7 @@ function startGame() {
   // show generated cards
   console.log(generatedCards);
   matrixGenerator(generatedCards);
-  interval = setInterval(timeGenerator, 1000);
+  interval = setInterval(timer, 1000);
   
 }
 
