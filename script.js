@@ -5,6 +5,7 @@ const stopBtn = document.getElementById("stop");
 const gameContainer = document.querySelector(".game-container");
 const result = document.getElementById("result");
 const controls = document.querySelector(".controls-container");
+let hOneEl = document.createElement("h1");
 
 //
 let cards;
@@ -98,6 +99,7 @@ const cardsGenerator = (size = 4) => {
 
 //Game Generator:
 const matrixGenerator = (generatedCards, size = 4) => {
+  gameContainer.parentNode.style.backgroundColor ="#bde0fe";
   gameContainer.textContent = "";
   generatedCards = [...generatedCards, ...generatedCards];
 
@@ -140,8 +142,8 @@ const matrixGenerator = (generatedCards, size = 4) => {
             //a win
             winCount++;
             if (winCount === Math.floor(generatedCards.length / 2)) {
-              result.innerHTML = `<h2> You Won </h2>
-                    <h4>moves: ${moves}</h4>`;
+              result.innerHTML = `<h2>Congratulation! You Won </h2>
+                    <h4>WohOo! completed in ${min} minutes and ${sec} seconds, with just ${moves} moves. </h4>`;
               stopGame();
             }
           } else {
@@ -172,6 +174,12 @@ const initializer = () => {
 
 // start the game
 startBtn.addEventListener("click", () => {
+
+  let userName = prompt("Please Enter Your Name") || 'Player';
+  hOneEl.textContent=`Welcome ${userName}!`;
+  document.body.prepend(hOneEl)
+  document.body.firstChild.style.textAlign="center";
+
   moves = 0;
   sec = 0;
   min = 0;
@@ -190,7 +198,7 @@ stopBtn.addEventListener(
   (stopGame = () => {
     controls.classList.remove("hide");
     stopBtn.classList.add("hide");
-    startBtn.classList.remove("hide");
+    startBtn.classList.toggle("hide");
     clearInterval(interval);
   })
 );
